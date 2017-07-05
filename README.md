@@ -1,4 +1,4 @@
-# `yubikey-hotplug`: Automatic screen lock/unlock for Yubikeys configured with challenge-response unlock
+# `yubikey-hotplug`: Automatic screen lock/unlock for Yubikeys configured with challenge-response screen unlock
 
 This is a small script that allows the running desktop environment's screensaver to be locked/unlocked based on hotplug events of a Yubikey. It has the following features:
 
