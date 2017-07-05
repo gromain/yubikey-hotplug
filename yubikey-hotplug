@@ -1,22 +1,37 @@
 #!/bin/bash
+foreach_passwd()
+{
+	call="$1"
+	while read line; do
+		IFS=: line=($line)
+		user="${line[0]}"
+		password="${line[1]}"
+		uid="${line[2]}"
+		gid="${line[3]}"
+		gecos="${line[4]}"
+		home="${line[5]}"
+		loginshell="${line[6]}"
+		if [ $uid -ge 1000 ]; then eval $call; fi
+	done < /etc/passwd
+}
 
 unlock()
 {
-    test -d "$HOME/.config/yubikey-hotplug" || return 0
+    test -d "$home/.config/yubikey-hotplug" || return 0
     [ $? -ne 0 ] && return 0
-    if fgrep -qx $serial "$HOME/.config/yubikey-hotplug/serials" ; then
-        logger -p kern.info "Unlocking screen for user $USER ($UID) due to Yubikey connect"
+    if fgrep -qx $serial "$home/.config/yubikey-hotplug/serials" ; then
+        logger -p kern.info "Unlocking screen for user $user ($uid) due to Yubikey connect"
         loginctl unlock-sessions
     else
-        logger -p kern.warn "Can't unlock screen for user $USER ($UID) due to Yubikey connect"
+        logger -p kern.warn "Can't unlock screen for user $user ($uid) due to Yubikey connect"
     fi
 }
 
 lock()
 {
-    test -d "$HOME/.config/yubikey-hotplug" || return 0
+    test -d "$home/.config/yubikey-hotplug" || return 0
     [ $? -ne 0 ] && return 0
-    logger -p kern.info "Locking screen for user $USER ($UID) due to Yubikey disconnect"
+    logger -p kern.info "Locking screen for user $user ($uid) due to Yubikey disconnect"
     loginctl lock-sessions
 }
 
@@ -33,11 +48,11 @@ case "$1" in
             exit 1
         fi
         logger -p kern.notice "Yubikey connected, serial #${serial}"
-        unlock
+        foreach_passwd unlock
         ;;
     disconnect)
         logger -p kern.notice "Yubikey disconnected"
-        lock
+        foreach_passwd lock
         ;;
     *)
         echo "Usage: $0 (connect|disconnect)"
