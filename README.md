@@ -21,6 +21,16 @@ echo `ykinfo -s -q` > ~/.config/yubikey-hotplug/serials
 
 If you don't know your Yubikey's serial number, use `ykinfo -s -q` to get it. If `ykinfo` can't figure out what it is then this program will not work, as it uses `ykinfo` to query the Yubikey's serial number. Note that some very old Yubikeys do not have serial numbers.
 
+## Installation
+
+This software uses the standard PKGBUILD system from Arch Linux, to use it, type in the following command after cloning this repo somewhere on your computer:
+
+```
+makepkg
+sudo pacman -U yubikey-hotplug-1-1-any.pkg.tar.xz
+```
+At some point, this package may be pushed to the Arch User Repository.
+
 ## Security
 
 Unlike other attributes, the serial number is completely burned into the Yubikey and no two will ever be the same. It is theoretically possible to make a fake device with the same hwid and API as a Yubikey. There is no challenge-response or other secret key based authentication that occurs when the system verifies the Yubikey's serial number. So keep this in mind, this utility is a convenience aid and not a replacement for proper workstation security.
