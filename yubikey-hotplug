@@ -1,68 +1,45 @@
 #!/bin/bash
 
-ykserial()
-{
-	export LANG=en_US.UTF-8
-	ykinfo -s | grep '^serial:' | cut -d: -f2 | tr -dc '[0-9]'
-}
-
-foreach_passwd()
-{
-call="$1"
-while read line; do
-IFS=: line=($line)
-user="${line[0]}"
-password="${line[1]}"
-uid="${line[2]}"
-gid="${line[3]}"
-gecos="${line[4]}"
-home="${line[5]}"
-loginshell="${line[6]}"
-
-eval $call
-done < /etc/passwd
-}
-
 unlock()
 {
-	test -d "/home/rbazile/.config/yubikey-hotplug" || return 0
-	[ $? -ne 0 ] && return 0
-	if fgrep -qx $serial "/home/rbazile/.config/yubikey-hotplug/serials" ; then
+    test -d "$HOME/.config/yubikey-hotplug" || return 0
+    [ $? -ne 0 ] && return 0
+    if fgrep -qx $serial "$HOME/.config/yubikey-hotplug/serials" ; then
         logger -p kern.info "Unlocking screen for user $USER ($UID) due to Yubikey connect"
         loginctl unlock-sessions
     else
         logger -p kern.warn "Can't unlock screen for user $USER ($UID) due to Yubikey connect"
-	fi
+    fi
 }
 
 lock()
 {
-	test -d "/home/rbazile/.config/yubikey-hotplug" || return 0
-	[ $? -ne 0 ] && return 0
+    test -d "$HOME/.config/yubikey-hotplug" || return 0
+    [ $? -ne 0 ] && return 0
     logger -p kern.info "Locking screen for user $USER ($UID) due to Yubikey disconnect"
     loginctl lock-sessions
 }
 
 case "$1" in
-	connect)
-		serial=
-		for ((i=0; i<5; i++)); do
-			serial=`ykserial`
-			[ -n "$serial" ] && break
-			sleep 1
-		done
-		if [ -z "$serial" ]; then
-			logger -p kern.warn "Yubikey connected but unable to determine its serial number."
-			exit 1
-		fi
-		logger -p kern.notice "Yubikey connected, serial #${serial}"
-		unlock
-		;;
-	disconnect)
-		logger -p kern.notice "Yubikey disconnected"
-		lock
-		;;
-	*)
-		echo "Usage: $0 (connect|disconnect)"
-		;;
+    connect)
+        serial=
+            for ((i=0; i<5; i++)); do
+                serial=`ykinfo -s -q`
+                [ -n "$serial" ] && break
+                sleep 1
+            done
+        if [ -z "$serial" ]; then
+            logger -p kern.warn "Yubikey connected but unable to determine its serial number."
+            exit 1
+        fi
+        logger -p kern.notice "Yubikey connected, serial #${serial}"
+        unlock
+        ;;
+    disconnect)
+        logger -p kern.notice "Yubikey disconnected"
+        lock
+        ;;
+    *)
+        echo "Usage: $0 (connect|disconnect)"
+        ;;
 esac
